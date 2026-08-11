@@ -1,0 +1,9 @@
+Machine Learning Tutorial
+
+Machine learning is a subset of artificial intelligence. It focuses on enabling computer systems to learn and improve from experience. Key concepts:
+
+1. Supervised Learning
+2. Unsupervised Learning
+3. Reinforcement Learning
+
+Applications: Image recognition, Natural language processing, Recommendation systems

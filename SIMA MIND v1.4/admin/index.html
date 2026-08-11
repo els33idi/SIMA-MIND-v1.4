@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SIMA MIND Admin Panel</title>
+  <style>
+    body { margin: 0; font-family: Inter, system-ui, sans-serif; background: #f2f5f9; color: #121828; }
+    .page { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    .card { background: #ffffff; border-radius: 18px; box-shadow: 0 10px 34px rgba(15, 23, 42, 0.08); padding: 24px; margin-bottom: 20px; }
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    input, button, select { border: 1px solid #d1d5db; border-radius: 12px; padding: 12px 14px; font-size: 14px; }
+    button { cursor: pointer; background: #1d4ed8; color: white; border: none; }
+    button.secondary { background: #f3f4f6; color: #111827; }
+    h1, h2, h3 { margin: 0 0 16px; }
+    .status-pill { display: inline-flex; align-items: center; gap: 8px; background: #eef2ff; color: #4338ca; padding: 8px 12px; border-radius: 999px; font-weight: 600; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e5e7eb; }
+    .hidden { display: none; }
+    .toast { position: fixed; bottom: 20px; right: 20px; background: #111827; color: white; padding: 14px 18px; border-radius: 14px; box-shadow: 0 10px 30px rgba(15,23,42,.2); }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="card" id="authCard">
+      <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <div>
+          <h1>SIMA MIND Admin Panel</h1>
+          <p style="color:#64748b; max-width:640px;">Secure admin access for user management, analytics, subscriptions, audit logs, and platform operations.</p>
+        </div>
+        <div id="connectedStatus" class="status-pill">Offline</div>
+      </div>
+      <div id="loginView">
+        <div class="row" style="align-items:flex-start; gap: 12px; flex-wrap:wrap;">
+          <input id="email" placeholder="Admin email" style="flex:1" />
+          <input id="password" type="password" placeholder="Password" style="flex:1" />
+          <button id="loginButton">Sign in</button>
+        </div>
+        <p id="loginMessage" style="color:#dc2626; margin-top:12px;"></p>
+      </div>
+      <div id="mfaView" class="hidden">
+        <div class="row" style="align-items:flex-start; gap: 12px; flex-wrap:wrap;">
+          <input id="mfaCode" placeholder="Enter MFA code" style="flex:1" />
+          <button id="mfaVerifyButton">Verify</button>
+          <button id="mfaCancelButton" class="secondary">Back to sign in</button>
+        </div>
+        <p id="mfaHint" style="color:#475569; margin-top:12px;">Enter the code from your authenticator app or email.</p>
+        <p id="mfaMessage" style="color:#dc2626; margin-top:12px;"></p>
+      </div>
+    </div>
+
+    <div id="dashboardView" class="hidden">
+      <div class="card row" style="justify-content:space-between; align-items:center;">
+        <div>
+          <h2>Dashboard</h2>
+          <p style="color:#64748b;">Overview of users, subscriptions, and admin operations.</p>
+        </div>
+        <button class="secondary" id="logoutButton">Logout</button>
+      </div>
+
+      <div class="card" id="profileCard">
+        <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <div>
+            <h3>Admin profile</h3>
+            <p id="adminEmail"></p>
+            <p id="adminRole" style="color:#475569; margin-top:6px;"></p>
+            <p id="adminMFAStatus" style="color:#475569; margin-top:6px;"></p>
+          </div>
+          <div class="row">
+            <button class="secondary" id="startTOTPButton">Enable TOTP MFA</button>
+            <button class="secondary hidden" id="disableMFAButton">Disable MFA</button>
+          </div>
+        </div>
+        <div id="totpSetupView" class="hidden" style="margin-top:16px;">
+          <p style="margin-bottom:8px;">Scan this QR code with your authenticator app, or copy the secret below.</p>
+          <div id="totpQrContainer" style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:12px;"></div>
+          <div style="margin-bottom:12px;"><strong>Secret:</strong> <span id="totpSecret"></span></div>
+          <div class="row" style="align-items:flex-start; gap: 12px; flex-wrap:wrap;">
+            <input id="totpConfirmCode" placeholder="Enter setup code" style="flex:1" />
+            <button id="confirmTOTPButton">Save TOTP</button>
+            <button id="cancelTOTPButton" class="secondary">Cancel</button>
+          </div>
+          <p id="totpMessage" style="color:#dc2626; margin-top:12px;"></p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Create new user</h3>
+        <div class="row" style="flex-wrap:wrap; gap:12px; margin-top:12px;">
+          <input id="createEmail" placeholder="New user email" style="flex:1; min-width:220px;" />
+          <input id="createPassword" type="password" placeholder="Password" style="flex:1; min-width:220px;" />
+          <select id="createRole" style="min-width:180px;">
+            <option value="student">student</option>
+            <option value="support_admin">support_admin</option>
+            <option value="analytics_admin">analytics_admin</option>
+            <option value="admin">admin</option>
+            <option value="super_admin">super_admin</option>
+          </select>
+          <select id="createStatus" style="min-width:180px;">
+            <option value="active">active</option>
+            <option value="suspended">suspended</option>
+          </select>
+          <button id="createUserButton">Create user</button>
+        </div>
+      </div>
+
+      <div class="grid" id="statsGrid"></div>
+
+      <div class="card">
+        <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h3>User management</h3>
+          <div class="row">
+            <input id="searchQuery" placeholder="Search email or ID" />
+            <button id="searchButton">Search</button>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Email</th><th>Role</th><th>Status</th><th>Created</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="userTableBody"></tbody>
+        </table>
+        <div class="row" style="justify-content:flex-end; gap:8px; margin-top:12px;">
+          <button class="secondary" id="userPrevButton">Prev</button>
+          <span id="userPageLabel">Page 1</span>
+          <button class="secondary" id="userNextButton">Next</button>
+        </div>
+      </div>
+
+      <div class="card hidden" id="selectedUserCard">
+        <div id="selectedUserBanner" class="row" style="display:none; justify-content:space-between; align-items:center; gap:12px; background:#eef2ff; padding:14px 16px; border-radius:16px; margin-bottom:16px; color:#1d4ed8; font-weight:600;">
+          <span id="selectedUserBannerText">Selected user: none</span>
+          <button class="secondary" id="refreshUserDetailsButton">Refresh</button>
+        </div>
+        <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <div>
+            <h3>Selected user details</h3>
+            <p id="selectedUserLabel">Choose a user from the table to manage sessions and subscription.</p>
+          </div>
+          <button class="secondary hidden" id="refreshUserDetailsButtonAlt">Refresh</button>
+        </div>
+        <div class="row" style="flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+          <div style="flex:1; min-width:220px;"><strong>Email:</strong> <span id="detailEmail">—</span></div>
+          <div style="flex:1; min-width:220px;"><strong>Role:</strong> <span id="detailRole">—</span></div>
+          <div style="flex:1; min-width:220px;"><strong>Status:</strong> <span id="detailStatus">—</span></div>
+        </div>
+        <div class="row" style="align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:16px;">
+          <select id="subscriptionPlan" style="min-width:220px;"></select>
+          <button id="saveSubscriptionButton">Update plan</button>
+          <div style="flex:1; min-width:220px;"><strong>Current plan:</strong> <span id="detailPlan">—</span></div>
+        </div>
+        <div>
+          <h4>Active sessions</h4>
+          <table>
+            <thead>
+              <tr><th>Device</th><th>IP</th><th>Created</th><th>Expires</th><th>Action</th></tr>
+            </thead>
+            <tbody id="sessionTableBody"></tbody>
+          </table>
+        </div>
+        <div style="margin-top:20px;">
+          <h4>Subscription history</h4>
+          <table>
+            <thead>
+              <tr><th>Plan</th><th>Started</th><th>Ends</th><th>Created</th><th>Status</th></tr>
+            </thead>
+            <tbody id="subscriptionHistoryBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <div>
+            <h3>Audit log</h3>
+            <p style="color:#64748b;">Review recent admin events and security actions.</p>
+          </div>
+          <div class="row" style="flex-wrap:wrap; gap: 12px;">
+            <input id="auditUserId" placeholder="Filter by user ID" style="width:180px" />
+            <select id="auditAction" style="min-width:180px;">
+              <option value="">All actions</option>
+              <option value="login">login</option>
+              <option value="logout">logout</option>
+              <option value="create_user">create_user</option>
+              <option value="delete_user">delete_user</option>
+              <option value="set_role">set_role</option>
+              <option value="set_status_active">set_status_active</option>
+              <option value="set_status_suspended">set_status_suspended</option>
+              <option value="set_subscription">set_subscription</option>
+              <option value="revoke_session">revoke_session</option>
+              <option value="mfa_enabled">mfa_enabled</option>
+              <option value="mfa_disabled">mfa_disabled</option>
+              <option value="password_reset">password_reset</option>
+            </select>
+            <select id="auditStatus" style="min-width:140px;">
+              <option value="">All statuses</option>
+              <option value="success">success</option>
+              <option value="failed">failed</option>
+            </select>
+            <input id="auditStart" type="date" />
+            <input id="auditEnd" type="date" />
+            <button id="auditButton">Refresh</button>
+            <button id="exportAuditButton" class="secondary">Export CSV</button>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Time</th><th>User</th><th>Action</th><th>Resource</th><th>Status</th><th>Details</th></tr>
+          </thead>
+          <tbody id="auditTableBody"></tbody>
+        </table>
+        <div class="row" style="justify-content:flex-end; gap:8px; margin-top:12px;">
+          <button class="secondary" id="auditPrevButton">Prev</button>
+          <span id="auditPageLabel">Page 1</span>
+          <button class="secondary" id="auditNextButton">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+  <script src="/admin/main.js"></script>
+</body>
+</html>

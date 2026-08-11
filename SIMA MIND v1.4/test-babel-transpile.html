@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="test-root"></div>
+    <script>
+        // Load the HTML file and extract script
+        fetch('/index.html')
+            .then(r => r.text())
+            .then(html => {
+                const match = html.match(/<script type="text\/babel">([\s\S]*?)<\/script>/);
+                if (!match) {
+                    console.error('No babel script found');
+                    document.getElementById('test-root').innerHTML = 'ERROR: No babel script';
+                    return;
+                }
+                
+                const code = match[1];
+                console.log('Script length:', code.length);
+                
+                // Try to transpile
+                try {
+                    const result = Babel.transform(code, {
+                        presets: ['react'],
+                        filename: 'index.jsx'
+                    });
+                    console.log('SUCCESS: Transpilation worked!');
+                    console.log('Output length:', result.code.length);
+                    document.getElementById('test-root').innerHTML = 'SUCCESS: Babel transpilation worked!';
+                } catch (err) {
+                    console.error('Babel error:', err.message);
+                    console.error('Location:', err.loc);
+                    const msg = `ERROR: Babel transpilation failed: ${err.message}`;
+                    document.getElementById('test-root').innerHTML = msg;
+                    if (err.loc) {
+                        console.error(`Line ${err.loc.line}, Col ${err.loc.column}`);
+                    }
+                }
+            });
+    </script>
+</body>
+</html>

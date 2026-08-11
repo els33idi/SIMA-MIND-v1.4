@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="output"></div>
+    <script>
+        // Simple JSX test
+        const simpleCode = `
+const Hello = () => <div>Test</div>;
+console.log(typeof Hello);
+        `;
+        
+        try {
+            const result = Babel.transform(simpleCode, {
+                presets: ['react']
+            });
+            console.log('Simple code transpiled successfully');
+            document.getElementById('output').innerHTML += '<p>Simple code OK</p>';
+        } catch(e) {
+            console.error('Simple code error:', e.message);
+            document.getElementById('output').innerHTML += `<p>Simple code error: ${e.message}</p>`;
+        }
+        
+        // Now try loading and transpiling the actual code
+        fetch('/index.html')
+            .then(r => r.text())
+            .then(html => {
+                const match = html.match(/<script type="text\/babel">([\s\S]*?)<\/script>/);
+                if (!match) {
+                    throw new Error('No babel script found in HTML');
+                }
+                
+                const code = match[1];
+                console.log('Trying to transpile actual code, length:', code.length);
+                
+                // Try just the first 5000 chars
+                const partialCode = code.substring(0, 5000);
+                try {
+                    const result = Babel.transform(partialCode, {
+                        presets: ['react']
+                    });
+                    console.log('Partial code transpiled successfully');
+                    document.getElementById('output').innerHTML += '<p>Partial code OK</p>';
+                } catch(e) {
+                    console.error('Partial code error:', e.message, 'at', e.loc);
+                    document.getElementById('output').innerHTML += `<p>Partial code error: ${e.message}</p>`;
+                    if (e.loc) {
+                        document.getElementById('output').innerHTML += `<p>At line ${e.loc.line}, col ${e.loc.column}</p>`;
+                    }
+                }
+                
+                // Try full code
+                try {
+                    const result = Babel.transform(code, {
+                        presets: ['react']
+                    });
+                    console.log('Full code transpiled successfully!');
+                    document.getElementById('output').innerHTML += '<p><b>Full code transpiled successfully!</b></p>';
+                } catch(e) {
+                    console.error('Full code error:', e.message, 'at', e.loc);
+                    document.getElementById('output').innerHTML += `<p><b>Full code error: ${e.message}</b></p>`;
+                    if (e.loc) {
+                        const lineNum = e.loc.line + 25;
+                        const lines = code.split('\n');
+                        const errorLine = lines[e.loc.line - 1];
+                        document.getElementById('output').innerHTML += `<p>Line ~${lineNum}, Col ${e.loc.column}: ${errorLine?.substring(0, 100)}</p>`;
+                    }
+                }
+            })
+            .catch(err => {
+                console.error('Fetch error:', err);
+                document.getElementById('output').innerHTML += `<p>Fetch error: ${err.message}</p>`;
+            });
+    </script>
+</body>
+</html>
